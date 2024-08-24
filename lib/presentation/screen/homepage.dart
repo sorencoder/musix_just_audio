@@ -1,65 +1,158 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:musix/logic/provider/audio_provider.dart';
+import 'package:musix/data/model/songs_model.dart';
+import 'package:musix/services/category_operation.dart';
+import 'package:musix/services/song_operation.dart';
+import 'package:musix/data/model/category.dart';
 
-import 'package:musix/presentation/screen/songpage.dart';
-import 'package:provider/provider.dart';
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
 
-class Homepage extends StatelessWidget {
-  const Homepage({super.key});
+  Widget creatAppBar(String message) {
+    return AppBar(
+      title: Text(message),
+      actions: [
+        IconButton(
+          onPressed: () {},
+          icon: const Padding(
+            padding: EdgeInsets.only(right: 8),
+            child: Icon(
+              Icons.settings,
+              color: Colors.black,
+              size: 30,
+            ),
+          ),
+        )
+      ],
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+    );
+  }
+
+  Widget createCategory(Category category) {
+    return Container(
+      color: Colors.blueGrey.shade400,
+      child: Row(
+        children: [
+          Image.network(
+            category.imageUrl!,
+            fit: BoxFit.cover,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: Text(category.name!),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> createListOfCategory() {
+    List<Category> categoryList = CategoryOperation.getCategory();
+    List<Widget> categories = categoryList
+        .map((Category category) => createCategory(category))
+        .toList();
+    return categories;
+  }
+
+  Widget createGrid() {
+    return SizedBox(
+      height: 200,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 8, right: 8),
+        child: GridView.count(
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
+          crossAxisCount: 2,
+          childAspectRatio: 5 / 2,
+          children: createListOfCategory(),
+        ),
+      ),
+    );
+  }
+
+  Widget createMusic(SongModel song) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: 100,
+            width: 100,
+            child: Image.network(
+              song.thumbnail_url,
+              fit: BoxFit.cover,
+            ),
+          ),
+          Text(
+            song.title,
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          Text(
+            song.artist,
+            style: const TextStyle(color: Colors.white),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget createMusicList(String label) {
+    List<SongModel> songList = MusicOperation.getMusic();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+              fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        SizedBox(
+          height: 150,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: songList.length,
+            itemBuilder: (BuildContext context, int index) {
+              return createMusic(songList[index]);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Musix'),
-        centerTitle: true,
+    return SafeArea(
+        child: Container(
+      height: MediaQuery.of(context).size.height,
+      width: MediaQuery.of(context).size.width,
+      decoration: BoxDecoration(
+          gradient: LinearGradient(
+              colors: [Colors.blueGrey.shade300, Colors.black],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight)),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            creatAppBar('Good Morning'),
+            const SizedBox(
+              height: 10,
+            ),
+            createGrid(),
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: createMusicList('Made For You'),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0, top: 5),
+              child: createMusicList('Playlist For You'),
+            )
+          ],
+        ),
       ),
-      body: StreamBuilder(
-          stream: FirebaseFirestore.instance.collection('songs').snapshots(),
-          initialData: 0,
-          builder: (context, AsyncSnapshot snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            } else {
-              if (snapshot.hasData) {
-                return GridView.builder(
-                  scrollDirection: Axis.vertical,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, childAspectRatio: 1.8),
-                  itemCount: snapshot.data!.docs.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    Map<String, dynamic> songs = snapshot.data!.docs[index]
-                        .data() as Map<String, dynamic>;
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: ListTile(
-                        onTap: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => Songpage(
-                                        title: songs['title'],
-                                        artist: songs['artist'],
-                                        url: songs['url'],
-                                      )));
-                          Provider.of<AudioProvider>(context, listen: false)
-                              .setUrl(songs['url']);
-                        },
-                        title: Text(songs['title']),
-                        subtitle: Text(songs['artist']),
-                      ),
-                    );
-                  },
-                );
-              } else {
-                return const Center(
-                  child: Text('No data!'),
-                );
-              }
-            }
-          }),
-    );
+    ));
   }
 }

@@ -24,6 +24,7 @@ class Songpage extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        appBar: AppBar(),
         body: Center(
             child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -36,27 +37,12 @@ class Songpage extends StatelessWidget {
             ),
             Text(title),
             Text(artist),
-            Padding(
-                padding: const EdgeInsets.fromLTRB(20.0, 0, 20, 0),
-                child: Consumer<AudioProvider>(
-                  builder: (context, v, child) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        //current position
-                        Text(formartTime(v.position)),
-                        //total duration
-                        Text(formartTime(v.duration))
-                      ],
-                    );
-                  },
-                )),
             Consumer<AudioProvider>(
               builder: (context, v, child) {
                 return Slider(
                     min: 0,
                     max: v.duration.inSeconds.toDouble(),
-                    value: v.position.inSeconds.toDouble(),
+                    value: v.isCompleted ? 0 : v.position.inSeconds.toDouble(),
                     onChangeEnd: (value) {
                       Provider.of<AudioProvider>(context, listen: false)
                           .seek(value);
@@ -66,6 +52,23 @@ class Songpage extends StatelessWidget {
                     });
               },
             ),
+            Padding(
+                padding: const EdgeInsets.fromLTRB(20.0, 0, 20, 0),
+                child: Consumer<AudioProvider>(
+                  builder: (context, v, child) {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        //current position
+                        v.isCompleted
+                            ? Text(formartTime(Duration.zero))
+                            : Text(formartTime(v.position)),
+                        //total duration
+                        Text(formartTime(v.duration))
+                      ],
+                    );
+                  },
+                )),
             Padding(
               padding: const EdgeInsets.fromLTRB(10.0, 0, 10, 0),
               child: Row(
@@ -77,15 +80,30 @@ class Songpage extends StatelessWidget {
                   ),
                   Consumer<AudioProvider>(
                     builder: (context, v, child) {
-                      return IconButton(
-                        icon: v.audioPlayer.playing
-                            ? const Icon(Icons.pause)
-                            : const Icon(Icons.play_arrow),
-                        iconSize: 50,
-                        onPressed: () {
-                          Provider.of<AudioProvider>(context, listen: false)
-                              .playPause();
-                        },
+                      return SizedBox(
+                        height: 66,
+                        width: 66,
+                        child: IconButton(
+                          icon: v.isBuffering
+                              ? const Center(
+                                  child: CircularProgressIndicator(),
+                                )
+                              : v.isCompleted
+                                  ? const Icon(Icons.play_arrow)
+                                  : v.isPlaying
+                                      ? const Icon(Icons.pause)
+                                      : const Icon(Icons.play_arrow),
+                          iconSize: 50,
+                          onPressed: () {
+                            v.isCompleted
+                                ? Provider.of<AudioProvider>(context,
+                                        listen: false)
+                                    .playAgain(url)
+                                : Provider.of<AudioProvider>(context,
+                                        listen: false)
+                                    .playPause();
+                          },
+                        ),
                       );
                     },
                   ),
