@@ -17,10 +17,7 @@ Whether you're looking to listen to individual tracks or manage an entire librar
 - **Responsive UI:** A clean and responsive user interface that adapts to different screen sizes.
 
 ## Screenshots
-
-![Screenshot 1](assets/screenshots/screenshot1.png)
-![Screenshot 2](assets/screenshots/screenshot2.png)
-
+**coming soon**
 ## Installation
 
 To run the Music Player App locally, follow these steps:
@@ -28,4 +25,7 @@ To run the Music Player App locally, follow these steps:
 1. **Clone the Repository:**
    ```bash
    git clone https://github.com/your-username/music-player-app.git
+2. **navigate to the directory**
+   ```bash
    cd music-player-app
+**Thank you for checking out the Music Player App! We hope you enjoy using it and look forward to your contributions and feedback**
