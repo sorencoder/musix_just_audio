@@ -117,7 +117,9 @@ class MusicSlab extends StatelessWidget {
                               height: 24,
                               width: 24,
                               child: Center(
-                                child: CircularProgressIndicator(),
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
                               ),
                             )
                           : Icon(audioProvider.isPlaying

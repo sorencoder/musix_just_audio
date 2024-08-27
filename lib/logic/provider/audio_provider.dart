@@ -7,9 +7,6 @@ import 'package:just_audio_background/just_audio_background.dart';
 import 'package:musix/data/model/songs_model.dart';
 
 class AudioProvider extends ChangeNotifier {
-  AudioProvider() {
-    print('build');
-  }
   final _audioPlayer = AudioPlayer();
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
