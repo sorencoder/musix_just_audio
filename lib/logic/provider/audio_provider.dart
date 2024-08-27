@@ -1,45 +1,108 @@
+// ignore_for_file: non_constant_identifier_names, avoid_return_types_on_setters
+
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
+import 'package:musix/data/model/songs_model.dart';
 
 class AudioProvider extends ChangeNotifier {
+  AudioProvider() {
+    print('build');
+  }
   final _audioPlayer = AudioPlayer();
-  Duration duration = Duration.zero;
-  Duration position = Duration.zero;
-  String msg = '';
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
+  Duration _bufferedPosition = Duration.zero; // Track buffered position
+  String _msg = '';
+
+  String title = '';
+  String artist = '';
+  String hexcode = '';
+  String thumnail_url = '';
+
+  StreamSubscription<Duration?>? _durStream;
+  StreamSubscription<Duration>? _posStream;
+  StreamSubscription<Duration>? _bufStream;
+  StreamSubscription<PlayerState>? _stateStream;
+
+// // Getter and Setter for title
+//   String get title => _title;
+//   set title(String value) {
+//     if (_title != value) {
+//       _title = value;
+//       notifyListeners();
+//     }
+//   }
+//   get artist => _artist;
+//   get hexcode => _hexcode;
+//   get thumnail_url => _thumnail_url;
 
   AudioPlayer get audioPlayer => _audioPlayer;
+  Duration get duration => _duration;
+  Duration get position => _position;
+  Duration get bufferedPosition =>
+      _bufferedPosition; // Expose buffered position
+  String get msg => _msg;
+
   bool get isPlaying => _audioPlayer.playing;
   bool get isBuffering =>
       _audioPlayer.processingState == ProcessingState.buffering;
   bool get isCompleted =>
       _audioPlayer.processingState == ProcessingState.completed;
-  void setUrl(String url) {
+
+  // Expose the player state stream to the UI
+  Stream<PlayerState> get playerStateStream => _audioPlayer.playerStateStream;
+
+//set the source url
+  // void setUrl(SongModel song) async {
+  //   try {
+  //     await _audioPlayer.setUrl(song.song_url);
+  //     _setupListeners();
+  //     await play(); // Ensure play is awaited to handle immediate playback
+  //   } catch (e) {
+  //     _msg = e.toString();
+  //     notifyListeners();
+  //   }
+  // }
+
+  void setSource(SongModel song) async {
+    title = song.title;
+    artist = song.artist;
+    hexcode = song.hex_code;
+    thumnail_url = song.thumbnail_url;
     try {
-      _audioPlayer.setUrl(url);
-      progressBar();
-      playerStateStream();
-      play();
+      final audioSource = AudioSource.uri(Uri.parse(song.song_url),
+          tag: MediaItem(
+              id: song.id,
+              title: song.title,
+              artist: song.artist,
+              artUri: Uri.parse(song.thumbnail_url)));
+      await _audioPlayer.setAudioSource(audioSource);
+      _setupListeners();
+      await play();
     } catch (e) {
-      msg = e.toString();
+      _msg = e.toString();
+      notifyListeners();
     }
   }
 
-  void play() async {
+  Future<void> play() async {
     try {
-      await _audioPlayer.play();
+      _audioPlayer.play();
       notifyListeners();
     } catch (e) {
-      msg = e.toString();
+      _msg = e.toString();
       notifyListeners();
     }
   }
 
-  void pause() async {
+  Future<void> pause() async {
     try {
-      await _audioPlayer.pause();
+      _audioPlayer.pause();
       notifyListeners();
     } catch (e) {
-      msg = e.toString();
+      _msg = e.toString();
       notifyListeners();
     }
   }
@@ -52,12 +115,12 @@ class AudioProvider extends ChangeNotifier {
     }
   }
 
-  void playAgain(String url) async {
+  Future<void> playAgain(String url) async {
     try {
-      await _audioPlayer.setUrl(url);
+      _audioPlayer.setUrl(url);
       notifyListeners();
     } catch (e) {
-      msg = e.toString();
+      _msg = e.toString();
       notifyListeners();
     }
   }
@@ -67,52 +130,44 @@ class AudioProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // void seekBar(double e) {
-  //   sliderValue = e;
-  //   notifyListeners();
-  // }
+  void _setupListeners() {
+    _durStream?.cancel();
+    _posStream?.cancel();
+    _stateStream?.cancel();
 
-  void progressBar() {
-    _audioPlayer.durationStream.listen((d) {
-      duration = d ?? Duration.zero;
-      notifyListeners();
+    _durStream = _audioPlayer.durationStream.listen((d) {
+      if (d != _duration) {
+        _duration = d ?? Duration.zero;
+        notifyListeners();
+      }
     });
-    _audioPlayer.positionStream.listen((p) {
-      position = p;
+
+    _posStream = _audioPlayer.positionStream.listen((p) {
+      if (p != _position) {
+        _position = p;
+        notifyListeners();
+      }
+    });
+    _bufStream = _audioPlayer.bufferedPositionStream.listen((b) {
+      if (b != _bufferedPosition) {
+        _bufferedPosition = b;
+        notifyListeners();
+      }
+    });
+
+    _stateStream = _audioPlayer.playerStateStream.listen((state) {
+      // Optionally handle player state changes
       notifyListeners();
     });
   }
 
-  void playerStateStream() {
-    _audioPlayer.playerStateStream.listen((state) {
-      notifyListeners();
-    });
+  @override
+  void dispose() {
+    _audioPlayer.stop();
+    _durStream?.cancel();
+    _posStream?.cancel();
+    _bufStream?.cancel();
+    _stateStream?.cancel();
+    super.dispose();
   }
-
-//   // Define the playlist
-//   final playlist = ConcatenatingAudioSource(
-//     // Start loading next item just before reaching it
-//     useLazyPreparation: true,
-//     // Customise the shuffle algorithm
-//     shuffleOrder: DefaultShuffleOrder(),
-//     // Specify the playlist items
-//     children: [
-//       AudioSource.uri(Uri.parse('https://example.com/track1.mp3')),
-//       AudioSource.uri(Uri.parse('https://example.com/track2.mp3')),
-//       AudioSource.uri(Uri.parse('https://example.com/track3.mp3')),
-//     ],
-//   );
-
-// // Load and play the playlist
-// // await player.setAudioSource(playlist, initialIndex: 0, initialPosition: Duration.zero);
-// // await player.seekToNext();                     // Skip to the next item
-// // await player.seekToPrevious();                 // Skip to the previous item
-// // await player.seek(Duration.zero, index: 2);    // Skip to the start of track3.mp3
-// // await player.setLoopMode(LoopMode.all);        // Set playlist to loop (off|all|one)
-// // await player.setShuffleModeEnabled(true);      // Shuffle playlist order (true|false)
-
-// // Update the playlist
-// // await playlist.add(newChild1);
-// // await playlist.insert(3, newChild2);
-// // await playlist.removeAt(3);
 }

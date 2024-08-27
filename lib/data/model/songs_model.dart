@@ -50,10 +50,10 @@ class SongModel {
     final data = doc.data() as Map<String, dynamic>;
     return SongModel(
         id: doc.id,
-        title: data['title'] ?? '',
-        artist: data['artist'] ?? '',
-        thumbnail_url: data['thumnail_url'] ?? '',
-        song_url: data['url'] ?? '',
-        hex_code: data['hex_code'] ?? '');
+        title: data['title'] ?? 'empty title',
+        artist: data['artist'] ?? 'empty artist',
+        thumbnail_url: data['thumnail_url'] ?? 'no thumnail url',
+        song_url: data['url'] ?? 'no song url',
+        hex_code: data['hex_code'] ?? 'no hex code');
   }
 }

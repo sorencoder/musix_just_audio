@@ -18,4 +18,6 @@ class SongCubit extends Cubit<SongStates> {
       emit(ErrorState(e.toString(), state.songs));
     }
   }
+
+  void get refresh => _initialize();
 }

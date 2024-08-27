@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
-class CpasswordVisiblity extends ChangeNotifier {
-  bool isvisible = true;
-  void setVisiblity() {
-    isvisible = !isvisible;
+class CpasswordVisibility extends ChangeNotifier {
+  bool _isVisible = true;
+
+  bool get isVisible => _isVisible;
+
+  void toggleVisibility() {
+    _isVisible = !_isVisible;
     notifyListeners();
   }
 }

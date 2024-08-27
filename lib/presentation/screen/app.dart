@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:musix/data/model/songs_model.dart';
+import 'package:musix/presentation/screen/music_slab.dart';
 import 'package:musix/presentation/screen/homepage.dart';
 import 'package:musix/presentation/screen/library_screen.dart';
 import 'package:musix/presentation/screen/recent_release_screen.dart';
@@ -12,39 +12,7 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
-  SongModel? song;
   int _currentIndex = 0;
-
-  miniPlayer(SongModel? song) {
-    if (song == null) {
-      return const SizedBox();
-    }
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 500),
-      color: Colors.blueGrey,
-      width: MediaQuery.of(context).size.width,
-      height: 50,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Image.network(
-            song.thumbnail_url,
-            fit: BoxFit.cover,
-          ),
-          Text(
-            song.title,
-            style: const TextStyle(color: Colors.white),
-          ),
-          IconButton(
-              onPressed: () {},
-              icon: const Icon(
-                Icons.play_arrow,
-                color: Colors.white,
-              ))
-        ],
-      ),
-    );
-  }
 
   final List<Widget> _screens = [
     const HomeScreen(),
@@ -54,11 +22,15 @@ class _AppState extends State<App> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: Stack(
+        children: [
+          _screens[_currentIndex],
+          const Positioned(bottom: 0, child: MusicSlab())
+        ],
+      ),
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          miniPlayer(song),
           BottomNavigationBar(
             currentIndex: _currentIndex,
             onTap: (index) {

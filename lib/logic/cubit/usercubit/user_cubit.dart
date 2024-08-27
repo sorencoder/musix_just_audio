@@ -7,10 +7,13 @@ class UserCubit extends Cubit<UserStates> {
   UserCubit() : super(InitialState());
   final UserRepository _userRepository = UserRepository();
 
-  void createAcount({required String email, required String password}) async {
+  void createAccount(
+      {required String email,
+      required String password,
+      required String name}) async {
     try {
       UserModel userModel =
-          await _userRepository.createAccount(email, password);
+          await _userRepository.createAccount(email, password, name);
       emit(LoggedInState(userModel: userModel));
     } catch (e) {
       emit(ErrorState(errormsg: e.toString()));

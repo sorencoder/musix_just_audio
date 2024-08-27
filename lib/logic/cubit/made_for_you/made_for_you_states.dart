@@ -1,7 +1,7 @@
-import 'package:musix/data/model/made_for_you.dart';
+import 'package:musix/data/model/songs_model.dart';
 
 abstract class MadeForYouStates {
-  final List<MadeForYou> madeForYou;
+  final List<SongModel> madeForYou;
   MadeForYouStates(this.madeForYou);
 }
 
